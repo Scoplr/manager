@@ -25,7 +25,7 @@ export function VelocityChart({ data }: { data: any[] }) {
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip
                         contentStyle={{ fontSize: 12 }}
-                        formatter={(value: number) => [`${value} tasks`, "Completed"]}
+                        formatter={(value) => [`${value ?? 0} tasks`, "Completed"]}
                     />
                     <Bar dataKey="tasks" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
