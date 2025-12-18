@@ -37,9 +37,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
 }
 
+// Return empty array to prevent DB queries during build
+// Blog posts will be rendered dynamically (ISR) instead of statically
 export async function generateStaticParams() {
-    const posts = await getPublishedPosts();
-    return posts.map((post) => ({ slug: post.slug }));
+    return [];
 }
 
 export default async function BlogPostPage({ params }: Props) {
