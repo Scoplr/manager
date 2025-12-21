@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check, Sparkles, Users, Palmtree, Receipt, Inbox, Calendar, Shield, ArrowRight, Zap, Quote, Star, Clock, TrendingDown } from "lucide-react";
+import { AuthButton } from "@/components/marketing/auth-button";
 
 export default function LandingPage() {
     return (
@@ -17,12 +18,7 @@ export default function LandingPage() {
                         <Link href="#pricing" className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                             Pricing
                         </Link>
-                        <Link
-                            href="/login"
-                            className="px-5 py-2.5 text-sm font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
-                        >
-                            Sign In
-                        </Link>
+                        <AuthButton />
                     </div>
                 </div>
             </header>
