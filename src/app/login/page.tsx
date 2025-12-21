@@ -41,8 +41,8 @@ export default function LoginPage() {
                     setError("Invalid email or password. Please try again.");
                 }
             } else {
-                // Success - redirect
-                window.location.href = "/";
+                // Success - redirect to app dashboard
+                window.location.href = "/app/inbox";
             }
         } catch (err) {
             setError("An error occurred. Please try again.");
