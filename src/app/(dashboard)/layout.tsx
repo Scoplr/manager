@@ -5,8 +5,9 @@ import { CommandPalette } from "@/components/ui/command-palette";
 import { KeyboardShortcutsModal } from "@/components/ui/keyboard-shortcuts";
 import { MobileActionButton } from "@/components/layout/mobile-action-button";
 
-// Force dynamic rendering was removed to allow optimization.
-// Next.js will auto-opt into dynamic if cookies/headers are used.
+// Force dynamic rendering for all dashboard routes since they require authentication
+// which uses headers() - not compatible with static rendering
+export const dynamic = 'force-dynamic';
 
 
 export default function DashboardLayout({

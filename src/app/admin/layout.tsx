@@ -5,6 +5,9 @@ import Link from "next/link";
 import { LayoutDashboard, Building2, LogOut } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button"; // Assuming I have one or I'll make a simple one.
 
+// Force dynamic rendering since this layout uses auth() which requires headers()
+export const dynamic = 'force-dynamic';
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const session = await auth();
 
