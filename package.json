@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node --import tsx scripts/migrate.ts && next start",
-    "start:no-migrate": "next start",
+    "start": "node --import tsx scripts/migrate.ts && node .next/standalone/server.js",
+    "start:no-migrate": "node .next/standalone/server.js",
     "migrate": "node --import tsx scripts/migrate.ts",
     "lint": "eslint",
     "test": "jest",
