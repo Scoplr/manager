@@ -5,6 +5,9 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ArrowLeft, Calendar, User, Tag, Sparkles } from "lucide-react";
 import { Metadata } from "next";
 
+// Force dynamic rendering - database not available during build on Railway
+export const dynamic = 'force-dynamic';
+
 type Props = {
     params: Promise<{ slug: string }>;
 };

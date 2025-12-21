@@ -4,6 +4,9 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, Calendar, Tag, Sparkles } from "lucide-react";
 import { Metadata } from "next";
 
+// Force dynamic rendering - database not available during build on Railway
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
     title: "Blog — wrkspace | HR Tips & Team Management Insights",
     description: "Tips, guides, and insights on team management, leave policies, onboarding, and building a great workplace culture.",
