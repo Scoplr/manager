@@ -3,39 +3,57 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 /**
- * Production Rate Limiting Setup:
- * 
- * Install: npm install @upstash/ratelimit @upstash/redis
- * 
- * Add to this file:
- * ```
- * import { Ratelimit } from "@upstash/ratelimit";
- * import { Redis } from "@upstash/redis";
- * 
- * const ratelimit = new Ratelimit({
- *   redis: Redis.fromEnv(),
- *   limiter: Ratelimit.slidingWindow(10, "10 s"), // 10 requests per 10 seconds
- *   analytics: true,
- * });
- * 
- * // In middleware, before auth check:
- * const ip = request.ip ?? "127.0.0.1";
- * const { success, limit, reset, remaining } = await ratelimit.limit(ip);
- * if (!success) {
- *   return new NextResponse("Too Many Requests", { status: 429 });
- * }
- * ```
- * 
- * Required env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+ * Subdomain Routing:
+ * - wrkspace.cc (main domain) → Marketing pages (/home, /blog, /privacy, /terms)
+ * - app.wrkspace.cc (subdomain) → Dashboard/Application
+ * - Login/Register work on both domains
  */
 
+// Marketing paths that should stay on main domain
+const marketingPaths = ["/home", "/blog", "/privacy", "/terms"];
+
+// Auth paths that work on both domains
+const authPaths = ["/login", "/register", "/api/auth", "/invite", "/setup"];
+
 // Public routes that don't require authentication
-const publicRoutes = ["/login", "/api/auth", "/home", "/invite"];
+const publicRoutes = ["/login", "/api/auth", "/home", "/invite", "/blog", "/privacy", "/terms", "/register"];
+
+// Check if running in production with custom domains
+const isProduction = process.env.NODE_ENV === "production";
+const appDomain = process.env.NEXT_PUBLIC_APP_URL || "https://app.wrkspace.cc";
+const marketingDomain = process.env.NEXT_PUBLIC_MARKETING_URL || "https://wrkspace.cc";
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const host = request.headers.get("host") || "";
 
-    // Allow public routes
+    // Detect if on app subdomain (app.wrkspace.cc or app.wrkspace.local for local testing)
+    const isAppSubdomain = host.startsWith("app.");
+    const isMainDomain = !isAppSubdomain && (host.includes("wrkspace.cc") || host.includes("wrkspace.local"));
+
+    // Only apply subdomain routing in production or when using test domains
+    const shouldApplySubdomainRouting = isProduction || host.includes("wrkspace");
+
+    if (shouldApplySubdomainRouting) {
+        // On main domain (wrkspace.cc), redirect dashboard routes to app subdomain
+        if (isMainDomain && !authPaths.some(p => pathname.startsWith(p)) && !marketingPaths.some(p => pathname.startsWith(p))) {
+            // This is a dashboard route on the main domain - redirect to app subdomain
+            if (pathname !== "/" && !pathname.startsWith("/api")) {
+                const redirectUrl = new URL(pathname, appDomain);
+                redirectUrl.search = request.nextUrl.search;
+                return NextResponse.redirect(redirectUrl);
+            }
+        }
+
+        // On app subdomain (app.wrkspace.cc), redirect marketing routes to main domain
+        if (isAppSubdomain && marketingPaths.some(p => pathname.startsWith(p))) {
+            const redirectUrl = new URL(pathname, marketingDomain);
+            redirectUrl.search = request.nextUrl.search;
+            return NextResponse.redirect(redirectUrl);
+        }
+    }
+
+    // Allow public routes without auth
     if (publicRoutes.some(route => pathname.startsWith(route))) {
         return NextResponse.next();
     }
@@ -48,8 +66,13 @@ export async function middleware(request: NextRequest) {
 
     // Redirect to login if not authenticated
     if (!token) {
+        // Build callback URL - if on app subdomain, callback should stay there
+        const callbackUrl = isAppSubdomain
+            ? `${appDomain}${pathname}`
+            : pathname;
+
         const loginUrl = new URL("/login", request.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
+        loginUrl.searchParams.set("callbackUrl", callbackUrl);
         return NextResponse.redirect(loginUrl);
     }
 
