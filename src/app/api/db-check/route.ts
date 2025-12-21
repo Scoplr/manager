@@ -18,8 +18,8 @@ export async function GET() {
 
         return NextResponse.json({
             success: true,
-            tables: result.rows,
-            tableCount: result.rows.length,
+            tables: result,
+            tableCount: result.length,
         });
     } catch (error) {
         return NextResponse.json({
