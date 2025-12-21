@@ -16,8 +16,6 @@ const publicRoutes = [
     "/register",
     "/api/auth",
     "/api/seed",
-    "/api/db-check",
-    "/api/db-migrate",
     "/home",
     "/invite",
     "/blog",
