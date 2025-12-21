@@ -2,25 +2,43 @@ import postgres from "postgres";
 
 /**
  * Startup migration script - runs before the app starts
- * Usage: node --loader ts-node/esm scripts/migrate.ts
  * 
  * This is idempotent - safe to run multiple times.
  * Tables are created using "IF NOT EXISTS" so it won't fail on existing tables.
+ * 
+ * IMPORTANT: This script will NOT block the app from starting if migration fails.
+ * This allows the app to start even if the database isn't available yet.
  */
 
 async function migrate() {
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
-        console.error("❌ DATABASE_URL not set");
-        process.exit(1);
+        console.warn("⚠️  DATABASE_URL not set - skipping migrations");
+        console.warn("   Set DATABASE_URL to enable automatic migrations");
+        process.exit(0); // Don't block app startup
+    }
+
+    // Log sanitized connection info for debugging
+    try {
+        const url = new URL(connectionString);
+        console.log(`📍 Database host: ${url.hostname}`);
+        console.log(`📍 Database name: ${url.pathname.slice(1)}`);
+    } catch {
+        console.warn("⚠️  DATABASE_URL is not a valid URL");
     }
 
     console.log("🔄 Running database migrations...");
 
-    const sql = postgres(connectionString);
+    const sql = postgres(connectionString, {
+        connect_timeout: 10, // 10 second timeout
+    });
 
     try {
+        // Test connection first
+        await sql`SELECT 1`;
+        console.log("✅ Database connection successful");
+
         // Create enums (idempotent)
         const enums = [
             { name: "user_role", values: ["admin", "manager", "member"] },
@@ -190,9 +208,15 @@ async function migrate() {
         console.log("✅ Migration completed successfully!");
 
     } catch (error) {
-        console.error("❌ Migration failed:", error);
-        await sql.end();
-        process.exit(1);
+        console.error("⚠️  Migration failed (app will continue starting):", error);
+        try {
+            await sql.end();
+        } catch {
+            // Ignore close errors
+        }
+        // DON'T exit with error - let the app start anyway
+        // The app can work without migrations if tables already exist
+        process.exit(0);
     }
 }
 
